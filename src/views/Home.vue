@@ -1,22 +1,26 @@
 <template>
   <div class="u-h-100 u-flex-col">
-    <div class="c_write">
-      <div class="cursor"><i class="el-icon-s-tools">Run</i></div>
-    </div>
     <div
       class="u-flex-1 u-flex h-auto u-col-top u-rela"
       style="overflow: hidden"
     >
       <div class="u-rela u-h-100">
-        <div class="left c_write" :style="{ width: left_width + 'px' }"></div>
+        <div class="left c_write" :style="{ width: left_width + 'px' }">
+          <el-tree :data="list" node-key="id" default-expand-all>
+            <span class="li u-font-14" slot-scope="{ node, data }">
+              <span>{{ node.data.name }}</span>
+              <span>{{ data }}</span>
+            </span>
+          </el-tree>
+        </div>
         <div class="drap_line" @mousedown="TextWidthChange"></div>
       </div>
       <div class="u-flex-1 u-flex-col u-h-100" style="overflow: hidden">
         <div>
-          <div class="tool-bar">
-            <span style="margin-left: 10px" class="c_write"
+          <div class="u-flex">
+            <!-- <span style="margin-left: 10px" class="c_write"
               >请选择编辑模式</span
-            >
+            > -->
             <el-select
               v-model="cmMode"
               placeholder="请选择"
@@ -31,27 +35,16 @@
                 :value="item"
               ></el-option>
             </el-select>
-            <el-button
+            <!-- <el-button
               type="primary"
               size="small"
               style="margin-left: 10x"
               @click="setStyle"
               >修改样式</el-button
-            >
-            <!-- <el-button
-              type="primary"
-              size="small"
-              style="margin-left: 10x"
-              @click="getValue"
-              >获取内容</el-button
-            >
-            <el-button
-              type="primary"
-              size="small"
-              style="margin-left: 10x"
-              @click="setValue"
-              >修改内容</el-button
             > -->
+            <div class="c_write">
+              <div class="cursor"><i class="el-icon-s-tools">Run</i></div>
+            </div>
           </div>
         </div>
         <div class="u-flex-1 u-flex-col" style="overflow: hidden">
@@ -371,6 +364,11 @@ export default {
       );
     },
 
+    append(node, data) {
+      console.log(node);
+      console.log(data);
+    },
+
     // 左边拖拽放大宽度
     TextWidthChange(e) {
       let odivParent = e.currentTarget.parentNode; //获取目标父元素
@@ -456,7 +454,7 @@ export default {
 .left {
   min-height: 100%;
   min-width: 200px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
   max-width: 400px;
   height: auto;
   overflow-x: hidden;
@@ -497,5 +495,17 @@ export default {
 .print {
   min-height: 100px !important;
   max-height: 600px;
+}
+/deep/.el-tree {
+  background-color: rgba(255, 255, 255, 0);
+  color: #fff;
+}
+
+/deep/.el-tree-node__content:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/deep/.el-tree-node:focus > .el-tree-node__content {
+  background-color: #519aba;
 }
 </style>

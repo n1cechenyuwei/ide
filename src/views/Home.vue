@@ -3,13 +3,16 @@
     <div class="c_write">
       <div class="cursor"><i class="el-icon-s-tools">Run</i></div>
     </div>
-    <div class="u-flex-1 u-flex h-auto u-col-top u-rela">
+    <div
+      class="u-flex-1 u-flex h-auto u-col-top u-rela"
+      style="overflow: hidden"
+    >
       <div class="u-rela u-h-100">
         <div class="left c_write" :style="{ width: left_width + 'px' }"></div>
         <div class="drap_line" @mousedown="TextWidthChange"></div>
       </div>
-      <div class="u-flex-1 u-h-100">
-        <div class="">
+      <div class="u-flex-1 u-flex-col u-h-100" style="overflow: hidden">
+        <div>
           <div class="tool-bar">
             <span style="margin-left: 10px" class="c_write"
               >请选择编辑模式</span
@@ -51,16 +54,25 @@
             > -->
           </div>
         </div>
-        <codemirror
-          ref="myCm"
-          :value="editorValue"
-          :options="cmOptions"
-          @changes="onCmCodeChanges"
-          @blur="onCmBlur"
-          @keydown.native="onKeyDown"
-          @mousedown.native="onMouseDown"
-          @paste.native="OnPaste"
-        ></codemirror>
+        <div class="u-flex-1 u-flex-col" style="overflow: hidden">
+          <codemirror
+            ref="myCm"
+            :value="editorValue"
+            :options="cmOptions"
+            @changes="onCmCodeChanges"
+            @blur="onCmBlur"
+            @keydown.native="onKeyDown"
+            @mousedown.native="onMouseDown"
+            @paste.native="OnPaste"
+          ></codemirror>
+          <div
+            class="c_write u-rela print"
+            :style="{ height: printHeight + 'px' }"
+          >
+            <div class="right_drap_line" @mousedown="printHeightChange"></div>
+            <div>666666</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -190,6 +202,7 @@ export default {
       ],
       left_width: 200,
       windowHeight: 0,
+      printHeight: 200, // 打印台高度
     };
   },
   watch: {
@@ -363,16 +376,25 @@ export default {
       let odivParent = e.currentTarget.parentNode; //获取目标父元素
       let dw = odivParent.offsetWidth; //存储默认的div的宽度。
       document.onmousemove = (e2) => {
-        console.log(e2);
         this.left_width = dw + (e2.clientX - dw);
-        // odivParent.style.width = dw + (e.clientX - dx) + "px";
-        // if (odivParent.offsetWidth <= 200) {
-        //   //当盒子缩小到一定范围内的时候，让他保持一个固定值，不再继续改变
-        //   odivParent.style.width = "200px";
-        // }
-        // if (odivParent.offsetWidth + odivParent.offsetLeft >= this.pdfWidth) {
-        //   odivParent.style.width = this.pdfWidth - odivParent.offsetLeft + "px";
-        // }
+      };
+      document.onmouseup = () => {
+        document.onmousemove = null;
+        document.onmouseup = null;
+      };
+      e.stopPropagation();
+      e.preventDefault();
+      return false;
+    },
+    // 打印台高度
+    printHeightChange(e) {
+      // let odivParent = e.currentTarget.parentNode; //获取目标父元素
+      // console.log(odivParent.offsetHeight);
+      // let dw = odivParent.offsetHeight; //存储默认的div的宽度。
+      document.onmousemove = (e2) => {
+        this.printHeight = this.windowHeight - e2.clientY;
+        console.log(this.printHeight);
+        // this.printHeight = dw + (e2.clientX - dw);
       };
       document.onmouseup = () => {
         document.onmousemove = null;
@@ -401,6 +423,7 @@ export default {
     }
   },
   mounted() {
+    this.windowHeight = document.documentElement.clientHeight;
     window.onresize = () => {
       return (() => {
         window.fullHeight = document.documentElement.clientHeight;
@@ -414,10 +437,12 @@ export default {
 </script>
 <style lang="scss" scoped>
 /deep/.vue-codemirror {
-  max-height: 800px;
+  overflow: hidden;
+  flex: 1;
 }
 /deep/.CodeMirror {
-  height: calc(100% - 100px) !important;
+  height: 100% !important;
+  min-height: 300px;
 }
 .CodeMirror-selected {
   background-color: blue !important;
@@ -452,5 +477,25 @@ export default {
 .drap_line:hover {
   width: 10px;
   background-color: #757575;
+}
+.right_drap_line {
+  position: absolute;
+  top: 0%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  transform: translateY(-50%);
+  background-color: #757575;
+  transition: 0.3s ease all;
+  z-index: 999;
+  cursor: n-resize;
+}
+.right_drap_line:hover {
+  height: 10px;
+  background-color: #757575;
+}
+.print {
+  min-height: 100px !important;
+  max-height: 600px;
 }
 </style>

@@ -10,6 +10,8 @@ var _router = _interopRequireDefault(require("./router"));
 
 var _store = _interopRequireDefault(require("./store"));
 
+var _index = _interopRequireDefault(require("./api/index"));
+
 var _vueCodemirror = _interopRequireDefault(require("vue-codemirror"));
 
 require("element-ui/lib/theme-chalk/index.css");
@@ -19,6 +21,8 @@ require("codemirror/lib/codemirror.css");
 require("codemirror/theme/dracula.css");
 
 require("codemirror/theme/blackboard.css");
+
+require("./assets/iconfont/iconfont.css");
 
 var _jshint = _interopRequireDefault(require("jshint"));
 
@@ -40,6 +44,11 @@ _vue["default"].use(_elementUi.Icon);
 
 _vue["default"].use(_elementUi.Tree);
 
+_vue["default"].use(_elementUi.Tabs);
+
+_vue["default"].use(_elementUi.TabPane);
+
+_vue["default"].prototype.$http = _index["default"];
 _vue["default"].prototype.$msgbox = _elementUi.MessageBox;
 _vue["default"].prototype.$alert = _elementUi.MessageBox.alert;
 _vue["default"].prototype.$confirm = _elementUi.MessageBox.confirm;

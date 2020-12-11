@@ -1,13 +1,16 @@
 import Vue from 'vue'
-import { Button, Select, Option, Dialog, Icon, Tree, Message, MessageBox } from 'element-ui';
+import { Button, Select, Option, Dialog, Icon, Tree, Message, MessageBox, Tabs, TabPane, } from 'element-ui';
 import App from './App.vue'
+
 import router from './router'
 import store from './store'
+import api from './api/index'
 import VueCodeMirror from 'vue-codemirror'
 import 'element-ui/lib/theme-chalk/index.css';
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/dracula.css";
 import "codemirror/theme/blackboard.css";
+import './assets/iconfont/iconfont.css'
 
 import jshint from "jshint";
 
@@ -19,7 +22,10 @@ Vue.use(Option);
 Vue.use(Dialog);
 Vue.use(Icon);
 Vue.use(Tree);
+Vue.use(Tabs);
+Vue.use(TabPane);
 
+Vue.prototype.$http = api
 Vue.prototype.$msgbox = MessageBox;
 Vue.prototype.$alert = MessageBox.alert;
 Vue.prototype.$confirm = MessageBox.confirm;

@@ -7,21 +7,24 @@
       <div class="u-rela u-h-100">
         <div class="left c_write" :style="{ width: left_width + 'px' }">
           <el-tree :data="list" node-key="id" default-expand-all>
-            <span class="li u-font-14" slot-scope="{ node, data }">
-              <span>{{ node.data.name }}</span>
-              <span>{{ data }}</span>
-            </span>
+            <div class="li u-font-14 u-flex" slot-scope="{ node, data }">
+              <!-- <div v-if="!data.children">
+                <i class="iconfont icon-c1"></i>
+              </div> -->
+              <span class="u-m-l-6" @click="() => append(node, data)">{{
+                data.name
+              }}</span>
+              <!-- <span>{{ data }}</span> -->
+            </div>
           </el-tree>
         </div>
         <div class="drap_line" @mousedown="TextWidthChange"></div>
       </div>
       <div class="u-flex-1 u-flex-col u-h-100" style="overflow: hidden">
         <div>
-          <div class="u-flex">
-            <!-- <span style="margin-left: 10px" class="c_write"
-              >请选择编辑模式</span
-            > -->
+          <div class="u-flex" style="background-color: rgba(33, 33, 33, 0.6)">
             <el-select
+              class="u-m-l-40 select_edit"
               v-model="cmMode"
               placeholder="请选择"
               size="small"
@@ -35,19 +38,23 @@
                 :value="item"
               ></el-option>
             </el-select>
-            <!-- <el-button
-              type="primary"
-              size="small"
-              style="margin-left: 10x"
-              @click="setStyle"
-              >修改样式</el-button
-            > -->
-            <div class="c_write">
-              <div class="cursor"><i class="el-icon-s-tools">Run</i></div>
+            <div class="cursor c_write u-m-l-20 runbtn">
+              <i class="el-icon-office-building"> build</i>
+            </div>
+            <div class="cursor c_write u-m-l-20 runbtn">
+              <i class="el-icon-s-tools"> Run</i>
             </div>
           </div>
         </div>
         <div class="u-flex-1 u-flex-col" style="overflow: hidden">
+          <!-- <el-tabs v-model="activeName" @tab-click="tabClick" type="card">
+            <el-tab-pane
+              :label="item.name"
+              :name="item.name"
+              v-for="(item, index) in tabs"
+              :key="index"
+            >
+              <input type="text" /> -->
           <codemirror
             ref="myCm"
             :value="editorValue"
@@ -58,12 +65,29 @@
             @mousedown.native="onMouseDown"
             @paste.native="OnPaste"
           ></codemirror>
+          <!-- </el-tab-pane>
+          </el-tabs> -->
+
           <div
-            class="c_write u-rela print"
+            class="c_write u-rela print u-flex-col"
             :style="{ height: printHeight + 'px' }"
           >
             <div class="right_drap_line" @mousedown="printHeightChange"></div>
-            <div>666666</div>
+            <div class="u-flex" style="background-color: #353a40; height: 40px">
+              <div class="tab u-font-14">OutPut</div>
+            </div>
+            <div class="u-flex-1 u-flex-col" style="overflow: hidden">
+              <codemirror
+                ref="myCm2"
+                :value="editorValue2"
+                :options="cmOptions"
+                @changes="onCmCodeChanges"
+                @blur="onCmBlur"
+                @keydown.native="onKeyDown"
+                @mousedown.native="onMouseDown"
+                @paste.native="OnPaste"
+              ></codemirror>
+            </div>
           </div>
         </div>
       </div>
@@ -79,6 +103,7 @@ import "codemirror/mode/sql/sql.js";
 import "codemirror/mode/python/python.js";
 import "codemirror/mode/clike/clike.js";
 import "codemirror/mode/go/go.js";
+import "codemirror/mode/rust/rust.js";
 // import "codemirror/mode/markdown/markdown.js";
 import "codemirror/addon/hint/show-hint.css";
 import "codemirror/addon/hint/show-hint.js";
@@ -120,13 +145,15 @@ export default {
       cmEditorModeOptions: [
         "json",
         "sql",
-        "javascript",
-        "python",
         "go",
         "C",
         "C++",
+        "Rust",
+        "python",
+        "javascript",
       ],
       editorValue: "",
+      editorValue2: "",
       cmTheme: "dracula",
       cmMode: "application/json",
       cmOptions: {
@@ -184,6 +211,24 @@ export default {
               children: [
                 {
                   name: "三级目录-1",
+                  code: `
+                    WebAssembly.instantiateStreaming(fetch("../out/main.wasm"), {
+                      main: {
+                        sayHello() {
+                          console.log("Hello from WebAssembly!");
+                          console.log(111)
+                        }
+                      },
+                      env: {
+                        abort(_msg, _file, line, column) {
+                          console.error("abort called at main.ts:" + line + ":" + column);
+                        }
+                      },
+                    }).then(result => {
+                      const exports = result.instance.exports;
+                      document.getElementById("container").textContent = "Result: " + exports.add(19, 23);
+                    }).catch(console.error);
+                  `,
                 },
               ],
             },
@@ -196,12 +241,15 @@ export default {
       left_width: 200,
       windowHeight: 0,
       printHeight: 200, // 打印台高度
+      tabs: [],
+      activeName: "",
     };
   },
   watch: {
     windowHeight(val) {
       // let that = this;
-      console.log("实时屏幕高度：", val, this.windowHeight);
+      // console.log("实时屏幕高度：", val, this.windowHeight);
+      this.windowHeight = val;
     },
     // cmTheme: function() {
     //   try {
@@ -239,21 +287,7 @@ export default {
         this.$refs.myCm.codemirror.setOption("foldGutter", true);
       });
     },
-    // 修改编辑框样式
-    setStyle(style) {
-      try {
-        this.$nextTick(() => {
-          let cm = this.refs.myCm.el.querySelector(".CodeMirror");
-          if (cm) {
-            cm.style.cssText = style;
-          } else {
-            this.$message.error("未找到编辑器元素，修改编辑器样式失败");
-          }
-        });
-      } catch (e) {
-        this.$message.error("修改编辑器样式失败：" + e.toString());
-      }
-    },
+
     // 切换编辑模式事件处理函数
     onEditorModeChange(value) {
       let cmMode = "application/json";
@@ -270,6 +304,9 @@ export default {
           break;
         case "go":
           cmMode = "text/x-go";
+          break;
+        case "Rust":
+          cmMode = "text/x-rustsrc";
           break;
 
         case "C":
@@ -352,8 +389,9 @@ export default {
       this.$refs.myCm.codemirror.closeHint();
     },
     onCmCodeChanges(cm) {
-      this.editorValue = cm.getValue();
-      this.resetLint();
+      console.log(cm);
+      // this.editorValue = cm.getValue();
+      // this.resetLint();
     },
     // 格式化字符串为json格式字符串
     formatStrInJson(strValue) {
@@ -367,7 +405,18 @@ export default {
     append(node, data) {
       console.log(node);
       console.log(data);
+      if (!data.children) {
+        console.log(this.tabs.indexOf(data));
+        if (this.tabs.indexOf(data) > -1) {
+          this.activeName = data.name;
+        } else {
+          this.tabs.push(data);
+          this.activeName = data.name;
+        }
+      }
     },
+
+    tabClick() {},
 
     // 左边拖拽放大宽度
     TextWidthChange(e) {
@@ -386,13 +435,8 @@ export default {
     },
     // 打印台高度
     printHeightChange(e) {
-      // let odivParent = e.currentTarget.parentNode; //获取目标父元素
-      // console.log(odivParent.offsetHeight);
-      // let dw = odivParent.offsetHeight; //存储默认的div的宽度。
       document.onmousemove = (e2) => {
         this.printHeight = this.windowHeight - e2.clientY;
-        console.log(this.printHeight);
-        // this.printHeight = dw + (e2.clientX - dw);
       };
       document.onmouseup = () => {
         document.onmousemove = null;
@@ -404,6 +448,7 @@ export default {
     },
   },
   created() {
+    // this.$http.ide.ideList({ name: "11", age: 22 });
     try {
       if (!this.editorValue) {
         this.cmOptions.lint = false;
@@ -507,5 +552,24 @@ export default {
 
 /deep/.el-tree-node:focus > .el-tree-node__content {
   background-color: #519aba;
+}
+.runbtn {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+}
+.runbtn:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #409eff;
+}
+/deep/.select_edit input {
+  background-color: rgba(0, 0, 0, 0) !important;
+  border: none;
+  color: #fff;
+}
+.tab {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
 }
 </style>

@@ -11,12 +11,24 @@
               <i class="el-icon-document"></i> 创建新项目
             </div>
           </div>
-          <el-tree :data="list" :props="treeProps" @node-click="tree_click">
+          <el-tree :data="list" :props="treeProps" @node-click="tree_click" @node-contextmenu="menu">
             <div class="li u-font-14 u-flex" slot-scope="{ data }">
+              <!-- <el-popover
+                placement="right"
+                width="130"
+                trigger="manual"
+                v-model="data.showMenu">
+                <div>
+                  <div>delete</div>
+                  <div>download</div>
+                </div> -->
+                <span class="u-m-l-2" slot="reference">{{ data.name }}</span>
+                <!-- <el-button slot="reference" @click="visible = !visible">手动激活</el-button> -->
+              <!-- </el-popover> -->
               <!-- <div v-if="!data.children">
                 <i class="iconfont icon-c1"></i>
               </div> -->
-              <span class="u-m-l-2">{{ data.name }}</span>
+              <!-- <span class="u-m-l-2">{{ data.name }}</span> -->
             </div>
           </el-tree>
         </div>
@@ -159,6 +171,16 @@
         >
       </span>
     </el-dialog>
+    
+    <div class="menuBox" v-show="showmenu" @click="showmenu = false" @contextmenu.prevent="showmenu = false">
+      <div class="menu" :style="{left: menuLfet +'px', top: menuTop + 'px'}">
+        <!-- <div class="li">delete</div> -->
+        <div class="li" @click="file_download">download</div>
+      </div>
+    </div>
+
+
+
   </div>
 </template>
 <script>
@@ -282,7 +304,11 @@ export default {
       contractDialog: false,
       editorValue3: "",
       contractParams: [],
-      loading: false
+      loading: false,
+      showmenu: false,
+      menuLfet: 0,
+      menuTop: 0,
+      fileInfo: {}, // 文件详情
     };
   },
   watch: {
@@ -334,7 +360,7 @@ export default {
           cmMode = "sql";
           break;
         case "javascript":
-          cmMode = "javascript";
+          cmMode = "text/javascript";
           break;
         case "go":
           cmMode = "text/x-go";
@@ -350,7 +376,7 @@ export default {
           cmMode = "text/x-c++src";
           break;
         case "python":
-          cmMode = "python";
+          cmMode = "text/x-python";
           break;
         default:
           cmMode = "application/json";
@@ -441,6 +467,29 @@ export default {
         this.getFileType(name);
       }
     },
+    // 文件右键
+    menu(node, data) {
+      if (!data.child) {
+        this.menuLfet = node.clientX
+        this.menuTop = node.clientY
+        this.showmenu = true
+        this.fileInfo = data
+      }
+    },
+
+    // 文件下载
+    file_download() {
+      let aLink = document.createElement('a');
+      aLink = document.createElement('a');
+      let evt = document.createEvent("MouseEvents");
+      evt.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      aLink.download = this.fileInfo.name;
+      aLink.href = URL.createObjectURL(new Blob([this.fileInfo.content]));
+      aLink.dispatchEvent(evt);
+    },
+
+
+
     save() {
       if (this.fileName != "") {
         let content = this.$refs.myCm.codemirror.getValue();
@@ -452,16 +501,6 @@ export default {
     async run() {
       this.save();
       this.contractDialog = true;
-      // let type = window.localStorage.getItem("filesType");
-
-      // let res = await this.$http.ide.run({
-      //   type: type,
-      //   imput: this.input,
-      //   contractFile: this.list[0],
-      // });
-      // if (res) {
-      //   this.editorValue2 = res;
-      // }
     },
 
     paramsAdd() {
@@ -482,16 +521,22 @@ export default {
       this.loading = true
       let input = {
         function: this.editorValue3,
-        paramters: this.contractParams
+        paramters: null
       }
-      // let arr = this.contractParams
-      // for (let i in arr) {
-      //   if (arr[i].key != '' && arr[i].value != '') {
-      //     let obj = {}
-      //     obj[arr[i].key] = arr[i].value
-      //     input.paramters.push(obj)
-      //   }
-      // }
+      let arr = this.contractParams
+      let arr2 = []
+      for (let i in arr) {
+        if (arr[i].key != '' && arr[i].value != '') {
+          let obj = {
+            key: arr[i].key,
+            value: arr[i].value
+          }
+          arr2.push(obj)
+        }
+      }
+      if (arr2.length > 0) {
+        input.paramters = arr2
+      }
       let type = window.localStorage.getItem("filesType");
       let res = await this.$http.ide.run({
         type: type,
@@ -558,6 +603,11 @@ export default {
       }
       this.onEditorModeChange(cmMode);
     },
+    
+    
+
+
+
 
     tabClick() {},
 
@@ -589,13 +639,17 @@ export default {
       e.preventDefault();
       return false;
     },
+
+
+
+
   },
   created() {
     let files = window.localStorage.getItem("files");
     if (files && files != "") {
       this.list = JSON.parse(files);
     }
-    this.getSdk("go");
+    this.getSdk("rust");
     try {
       if (!this.editorValue) {
         this.cmOptions.lint = false;
@@ -660,7 +714,7 @@ export default {
   height: 100%;
   background-color: #757575;
   transition: 0.3s ease all;
-  z-index: 999;
+  z-index: 20;
 }
 .drap_line:hover {
   width: 10px;
@@ -675,7 +729,7 @@ export default {
   transform: translateY(-50%);
   background-color: #757575;
   transition: 0.3s ease all;
-  z-index: 999;
+  z-index: 20;
   cursor: n-resize;
 }
 .right_drap_line:hover {
@@ -749,4 +803,34 @@ export default {
 .title_bg {
   background-color: rgba(33, 33, 33, 0.6);
 }
+.menuBox {
+  background-color: rgba(0, 0, 0, 0);
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  z-index: 99;
+  .menu {
+    position: absolute;
+    background-color: #303342;
+    color: #fff;
+    width: 130px;
+    padding: 10px 0;
+    box-shadow: 0 2px 8px #000;
+    color: #BBB;
+    background-color: #2D2F31;
+    .li {
+      height: 30px;
+      line-height: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 10px;
+    }
+    .li:hover {
+      background-color: rgba(33, 33, 33, 0.6);
+    }
+  }
+}
+
 </style>

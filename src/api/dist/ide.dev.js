@@ -5,13 +5,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _request = _interopRequireDefault(require("./request"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+var _request = require("./request");
 
 var ide = {
-  ideList: function ideList(data) {
-    return _request["default"].post("asddd/getOrderList", data);
+  getsdk: function getsdk(data) {
+    return (0, _request.get)("getsdk", data);
+  },
+  run: function run(data) {
+    return (0, _request.post)("run", data);
   }
 };
 var _default = ide;

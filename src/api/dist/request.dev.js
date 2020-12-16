@@ -3,15 +3,20 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = void 0;
+exports.post = exports.get = void 0;
 
 var _axios = _interopRequireDefault(require("axios"));
 
+var _elementUi = require("element-ui");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-// import router from '../router'
-// import QS from 'qs'
-// import { Message} from 'element-ui';
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 //跳转到登录的方法
 // const goLogin = ()=>{
 //   router.replace({
@@ -45,18 +50,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
 //   }
 // }
 //创建axios实例
-console.log(process.env);
+// console.log(process.env)
+var instance = _axios["default"].create({
+  baseURL: process.env.VUE_APP_BASEURL // timeout: 1000*10
 
-var instace = _axios["default"].create({
-  baseURL: process.env.VUE_APP_BASEURL,
-  timeout: 1000 * 10
 }); //设置post请求头
 
 
-instace.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'; //请求拦截器，每次请求如果token存在则在请求头中携带token
+instance.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'; //请求拦截器，每次请求如果token存在则在请求头中携带token
 
-instace.interceptors.request.use(function (config) {
-  // console.log(config.data)
+instance.interceptors.request.use(function (config) {
+  // console.log(config.params)
   // if (config.method == 'post') {
   //   config.data = QS.stringify(config.data)
   // }
@@ -70,27 +74,50 @@ instace.interceptors.request.use(function (config) {
   return Promise.error(error);
 }); //响应拦截器
 
-instace.interceptors.response.use(function (res) {
-  res.status === 200 ? Promise.resolve(res) : Promise.reject(res);
-}, function (error) {
-  console.log(error, 22); // const {response} = error
-  // if(response){
-  // //请求发出，但是不是2x
-  // errorHandle(response.status,response.data.message)
-  // return Promise.reject(response)
-  // }else{
-  //    // 处理断网的情况
-  //   // eg:请求超时或断网时，更新state的network状态
-  //  // network状态在app.vue中控制着一个全局的断网提示组件的显示隐藏
-  //  // 关于断网组件中的刷新重新获取数据，会在断网组件中说
-  //  if(!window.navigator.onLine){
-  //      //处理断网的操作
-  //  }else{
-  //     return Promise.reject(error)
-  //  }
-  // }
+instance.interceptors.response.use(function (res) {
+  if (res.data.code && res.data.code != 200) {
+    _elementUi.Message.error(res.data.message);
+  }
 
+  return Promise.resolve(res.data);
+}, function (error) {
   return Promise.reject(error);
 });
-var _default = instace;
-exports["default"] = _default;
+/* 统一封装get请求 */
+
+var get = function get(url, params) {
+  var config = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  return new Promise(function (resolve, reject) {
+    instance(_objectSpread({
+      method: 'get',
+      url: url,
+      params: params
+    }, config)).then(function (response) {
+      resolve(response);
+    })["catch"](function (error) {
+      reject(error);
+    });
+  });
+};
+/* 统一封装post请求  */
+
+
+exports.get = get;
+
+var post = function post(url, data) {
+  var config = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  return new Promise(function (resolve, reject) {
+    instance(_objectSpread({
+      method: 'post',
+      url: url,
+      data: data
+    }, config)).then(function (response) {
+      resolve(response);
+    })["catch"](function (error) {
+      reject(error);
+    });
+  });
+}; // export default instance
+
+
+exports.post = post;

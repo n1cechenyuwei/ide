@@ -1,7 +1,10 @@
-import request from './request'
+import {get, post} from './request'
 const ide = {
-  ideList(data){
-    return request.post(`asddd/getOrderList`, data)
+  getsdk(data){
+    return get(`getsdk`, data)
+  },
+  run(data) {
+    return post(`run`, data)
   }
 }
 export default ide;

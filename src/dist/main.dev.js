@@ -48,6 +48,10 @@ _vue["default"].use(_elementUi.Tabs);
 
 _vue["default"].use(_elementUi.TabPane);
 
+_vue["default"].use(_elementUi.Input);
+
+_vue["default"].use(_elementUi.Loading);
+
 _vue["default"].prototype.$http = _index["default"];
 _vue["default"].prototype.$msgbox = _elementUi.MessageBox;
 _vue["default"].prototype.$alert = _elementUi.MessageBox.alert;

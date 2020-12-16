@@ -1,7 +1,7 @@
 import axios from 'axios'
 // import router from '../router'
 // import QS from 'qs'
-// import { Message} from 'element-ui';
+import { Message} from 'element-ui';
 
 //跳转到登录的方法
 // const goLogin = ()=>{
@@ -38,20 +38,19 @@ import axios from 'axios'
 // }
 
 //创建axios实例
-console.log(process.env)
-var instace = axios.create({
+// console.log(process.env)
+var instance = axios.create({
   baseURL: process.env.VUE_APP_BASEURL,
-  timeout: 1000*10
+  // timeout: 1000*10
 })
 
 //设置post请求头
-instace.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+instance.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 
 //请求拦截器，每次请求如果token存在则在请求头中携带token
-instace.interceptors.request.use(
-  
+instance.interceptors.request.use(
   config=>{
-    // console.log(config.data)
+    // console.log(config.params)
     // if (config.method == 'post') {
     //   config.data = QS.stringify(config.data)
     // }
@@ -66,30 +65,48 @@ instace.interceptors.request.use(
 
 //响应拦截器
 
-instace.interceptors.response.use(
+instance.interceptors.response.use(
   res=>{
-    res.status === 200 ? Promise.resolve(res) :Promise.reject(res)
+    if (res.data.code && res.data.code != 200) {
+      Message.error(res.data.message)
+    }
+    return Promise.resolve(res.data)
   },
   error => {
-    console.log(error, 22)
-    // const {response} = error
-    // if(response){
-    // //请求发出，但是不是2x
-    // errorHandle(response.status,response.data.message)
-    // return Promise.reject(response)
-    // }else{
-    //    // 处理断网的情况
-    //   // eg:请求超时或断网时，更新state的network状态
-    //  // network状态在app.vue中控制着一个全局的断网提示组件的显示隐藏
-    //  // 关于断网组件中的刷新重新获取数据，会在断网组件中说
-    //  if(!window.navigator.onLine){
-    //      //处理断网的操作
-    //  }else{
-    //     return Promise.reject(error)
-    //  }
-    // }
     return Promise.reject(error);
    
   })
 
-  export default instace
+  /* 统一封装get请求 */
+export const get = (url, params, config = {}) => {
+  return new Promise((resolve, reject) => {
+    instance({
+      method: 'get',
+      url,
+      params,
+      ...config
+    }).then(response => {
+      resolve(response)
+    }).catch(error => {
+      reject(error)
+    })
+  })
+}
+
+/* 统一封装post请求  */
+export const post = (url, data, config = {}) => {
+  return new Promise((resolve, reject) => {
+    instance({
+      method: 'post',
+      url,
+      data,
+      ...config
+    }).then(response => {
+      resolve(response)
+    }).catch(error => {
+      reject(error)
+    })
+  })
+}
+
+  // export default instance

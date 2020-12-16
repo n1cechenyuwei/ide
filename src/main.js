@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { Button, Select, Option, Dialog, Icon, Tree, Message, MessageBox, Tabs, TabPane, } from 'element-ui';
+import { Button, Select, Option, Dialog, Icon, Tree, Message, MessageBox, Tabs, TabPane, Input, Loading } from 'element-ui';
 import App from './App.vue'
 
 import router from './router'
@@ -24,6 +24,8 @@ Vue.use(Icon);
 Vue.use(Tree);
 Vue.use(Tabs);
 Vue.use(TabPane);
+Vue.use(Input);
+Vue.use(Loading);
 
 Vue.prototype.$http = api
 Vue.prototype.$msgbox = MessageBox;

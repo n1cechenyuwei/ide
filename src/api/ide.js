@@ -5,6 +5,12 @@ const ide = {
   },
   run(data) {
     return post(`run`, data)
+  },
+  build(data) {
+    return post(`towasm`, data)
+  },
+  projectList() {
+    return get(`getlanguage`)
   }
 }
 export default ide;

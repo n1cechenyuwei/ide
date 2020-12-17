@@ -13,6 +13,12 @@ var ide = {
   },
   run: function run(data) {
     return (0, _request.post)("run", data);
+  },
+  build: function build(data) {
+    return (0, _request.post)("towasm", data);
+  },
+  projectList: function projectList() {
+    return (0, _request.get)("getlanguage");
   }
 };
 var _default = ide;

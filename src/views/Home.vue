@@ -13,18 +13,9 @@
           </div>
           <el-tree :data="list" :props="treeProps" @node-click="tree_click" @node-contextmenu="menu">
             <div class="li u-font-14 u-flex" slot-scope="{ data }">
-              <!-- <el-popover
-                placement="right"
-                width="130"
-                trigger="manual"
-                v-model="data.showMenu">
-                <div>
-                  <div>delete</div>
-                  <div>download</div>
-                </div> -->
-                <span class="u-m-l-2" slot="reference">{{ data.name }}</span>
-                <!-- <el-button slot="reference" @click="visible = !visible">手动激活</el-button> -->
-              <!-- </el-popover> -->
+              <span class="u-m-l-2" slot="reference">{{ data.name }}</span>
+               
+             
               <!-- <div v-if="!data.children">
                 <i class="iconfont icon-c1"></i>
               </div> -->
@@ -52,50 +43,52 @@
                 :value="item"
               ></el-option>
             </el-select>
-            <!-- <div>
-              <el-input
-                v-model="input.function"
-                size="mini"
-                placeholder="请输入内容"
-              ></el-input>
-            </div> -->
             <div class="cursor c_write u-m-l-20 runbtn" @click="save">
               <i class="el-icon-office-building"> save</i>
             </div>
-            <div class="cursor c_write u-m-l-20 runbtn" @click="run">
+            <div class="cursor c_write u-m-l-20 runbtn" @click="run('build')">
+              <i class="el-icon-s-tools"> Build</i>
+            </div>
+            <div class="cursor c_write u-m-l-20 runbtn" @click="run('run')">
               <i class="el-icon-s-tools"> Run</i>
             </div>
+            
           </div>
         </div>
         <div class="title_bg u-flex" v-show="fileName != ''">
           <div class="runbtn cursor c_write active">{{ fileName }}</div>
         </div>
-        <div class="u-flex-1 u-flex-col" style="overflow: hidden">
+        <div class="u-flex-1 u-flex-col u-row-between" style="overflow: hidden">
           <!-- <el-tabs v-model="activeName" @tab-click="tabClick" type="card">
             <el-tab-pane
               :label="item.name"
               :name="item.name"
               v-for="(item, index) in tabs"
               :key="index"
-            >
-              <input type="text" /> -->
-          <codemirror
-            v-show="fileName != ''"
-            ref="myCm"
-            :value="editorValue"
-            :options="cmOptions"
-            @changes="onCmCodeChanges"
-            @blur="onCmBlur"
-            @keydown.native="onKeyDown"
-            @mousedown.native="onMouseDown"
-            @paste.native="OnPaste"
-          ></codemirror>
+            > -->
+          <!-- <div style="overflow: hidden"> -->
+            <codemirror
+              v-show="fileName != ''"
+              ref="myCm"
+              :value="editorValue"
+              :options="cmOptions"
+              @changes="onCmCodeChanges"
+              @blur="onCmBlur"
+              @keydown.native="onKeyDown"
+              @mousedown.native="onMouseDown"
+              @paste.native="OnPaste"
+            ></codemirror>
+            <div style="height:200px" v-show="fileName == ''">
+
+            </div>
+          <!-- </div> -->
+         
           <!-- </el-tab-pane>
           </el-tabs> -->
 
           <div
-            class="c_write u-rela print u-flex-col"
-            :style="{ height: printHeight + 'px' }"
+            class="c_write u-rela print u-flex-col "
+            :style="{ height: printHeight }"
           >
             <div class="right_drap_line" @mousedown="printHeightChange"></div>
             <div class="u-flex" style="background-color: #353a40; height: 40px">
@@ -121,13 +114,13 @@
       width="800px"
     >
       <div>
-        <div class="project" v-for="(item, index) in 5" :key="index">
-          项目 {{ index }}
+        <div :class="['project', pro_active == index ? 'pro_active': '']" v-for="(item, index) in projectList" :key="index" @click="pro_active = index">
+          {{item}}
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"
+        <el-button type="primary" @click="createProject"
           >确 定</el-button
         >
       </span>
@@ -165,9 +158,9 @@
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="contractDialog = false">取 消</el-button>
+        <el-button @click="contractDialog = false">cancel</el-button>
         <el-button type="primary" @click="runSubmit"
-          >运 行</el-button
+          >{{runType == 'run' ? 'Run' : 'Build'}}</el-button
         >
       </span>
     </el-dialog>
@@ -175,7 +168,7 @@
     <div class="menuBox" v-show="showmenu" @click="showmenu = false" @contextmenu.prevent="showmenu = false">
       <div class="menu" :style="{left: menuLfet +'px', top: menuTop + 'px'}">
         <!-- <div class="li">delete</div> -->
-        <div class="li" @click="file_download">download</div>
+        <div class="li" @click="file_download(fileInfo.name, fileInfo.content)">download</div>
       </div>
     </div>
 
@@ -239,6 +232,7 @@ export default {
         "python",
         "javascript",
       ],
+      projectList: [],
       fileName: "",
       editorValue: "",
       editorValue2: "",
@@ -292,12 +286,15 @@ export default {
       },
       cmOptions2: {
         theme: "dracula",
+        readOnly: true,
+        lineWrapping: true,
+        lineNumbers: true,
       },
       list: [],
       treeProps: { children: "child" },
       left_width: 200,
       windowHeight: 0,
-      printHeight: 200, // 打印台高度
+      printHeight: '100%', // 打印台高度
       tabs: [],
       activeName: "",
       dialogVisible: false,
@@ -309,6 +306,8 @@ export default {
       menuLfet: 0,
       menuTop: 0,
       fileInfo: {}, // 文件详情
+      runType: 'run',
+      pro_active: 0
     };
   },
   watch: {
@@ -317,15 +316,34 @@ export default {
     // },
   },
   methods: {
+    // 获取所有项目列表
+    async getProjectList() {
+      let res = await this.$http.ide.projectList()
+      if (res.code == 200) {
+        this.projectList = res.projectList
+      }
+    },
+    createProject() {
+      let pro = this.projectList[this.pro_active]
+      if (pro == undefined) {
+        return this.$message.error('创建失败')
+      }
+      this.loading = true
+      this.getSdk(pro)
+
+    },
+
     // 获取sdk
     async getSdk(type) {
       let res = await this.$http.ide.getsdk({ type: type });
+      this.loading = false
       if (res.code == 200) {
         let file = res.sdkFile;
         file.name = type;
         window.localStorage.setItem("filesType", type);
         window.localStorage.setItem("files", JSON.stringify([file]));
         this.list = [file];
+        this.dialogVisible = false
       }
     },
 
@@ -459,7 +477,8 @@ export default {
         this.defaultJsonIndentation
       );
     },
-    tree_click(data) {
+    tree_click(data,node) {
+      console.log(node)
       if (!data.child) {
         this.editorValue = data.content;
         this.fileName = data.name;
@@ -478,13 +497,13 @@ export default {
     },
 
     // 文件下载
-    file_download() {
+    file_download(filename, file) {
       let aLink = document.createElement('a');
       aLink = document.createElement('a');
       let evt = document.createEvent("MouseEvents");
       evt.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      aLink.download = this.fileInfo.name;
-      aLink.href = URL.createObjectURL(new Blob([this.fileInfo.content]));
+      aLink.download = filename;
+      aLink.href = URL.createObjectURL(new Blob([file]));
       aLink.dispatchEvent(evt);
     },
 
@@ -498,8 +517,9 @@ export default {
       }
     },
 
-    async run() {
+    async run(type) {
       this.save();
+      this.runType = type
       this.contractDialog = true;
     },
 
@@ -538,17 +558,69 @@ export default {
         input.paramters = arr2
       }
       let type = window.localStorage.getItem("filesType");
-      let res = await this.$http.ide.run({
-        type: type,
-        input: input,
-        contractFile: this.list[0],
-      });
-      this.loading = false
-      if (res) {
-        this.editorValue2 = res;
-        this.contractDialog = false
-      }
+      if (this.runType == 'run') {
+        let res = await this.$http.ide.run({
+          type: type,
+          input: input,
+          contractFile: this.list[0],
+        });
+        this.loading = false
+        if (res) {
+          this.editorValue2 += res;
+          this.contractDialog = false
+        }
+      } else {
+        let res = await this.$http.ide.build({
+          type: type,
+          input: input,
+          contractFile: this.list[0],
+        });
+        this.loading = false
+        console.log(res.buildContent.wasmFile.content)
+        let file = res.buildContent.wasmFile.content
+        let blob = this.dataURLtoBlob(file)
+        let aLink = document.createElement('a');
+        aLink = document.createElement('a');
+        let evt = document.createEvent("MouseEvents");
+        evt.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        aLink.download = 'main.wasm';
+        aLink.href = URL.createObjectURL(blob);
+        aLink.dispatchEvent(evt);
 
+
+        // this.file_download('main.wasm', blob)
+        // console.log(res)
+        // if (res.code == 200) {
+        //   this.editorValue2 += `${res.buildContent.buildErrMsg}`
+        //   if (res.buildContent.wasmFile) {
+        //     res.buildContent.wasmFile.isRead = false
+        //     this.list[0].child.push(res.buildContent.wasmFile)
+        //   }
+        //   this.contractDialog = false
+        // }
+      }
+      
+
+    },
+
+    // base64文件转二进制
+    dataURLtoBlob(base64) {
+      // let arr = dataurl.split(','),
+      // mime = arr[0].match(/:(.*?);/)[1],
+      // bstr = atob(arr[0]),
+      // n = bstr.length,
+      // u8arr = new Uint8Array(n);
+      // while(n--){
+      //   u8arr[n] = bstr.charCodeAt(n);
+      // }
+      // return new Blob([u8arr], {type:mime});
+      let bstr = atob(base64),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n) // 转换编码后才可以使用charCodeAt 找到Unicode编码
+      }  
+      return new Blob([u8arr])
     },
 
     filterDoc(name, content, arr) {
@@ -563,6 +635,7 @@ export default {
         }
       }
     },
+
 
     getFileType(value) {
       let cmMode = "json";
@@ -629,7 +702,7 @@ export default {
     // 打印台高度
     printHeightChange(e) {
       document.onmousemove = (e2) => {
-        this.printHeight = this.windowHeight - e2.clientY;
+        this.printHeight = this.windowHeight - e2.clientY + 'px';
       };
       document.onmouseup = () => {
         document.onmousemove = null;
@@ -649,7 +722,7 @@ export default {
     if (files && files != "") {
       this.list = JSON.parse(files);
     }
-    this.getSdk("rust");
+    this.getProjectList()
     try {
       if (!this.editorValue) {
         this.cmOptions.lint = false;
@@ -685,6 +758,10 @@ export default {
 /deep/.CodeMirror {
   height: 100% !important;
   min-height: 300px;
+  // font-family: Apple LiGothic Medium;
+  // font-size: 14px;
+  // font-family: Helvetica, Tahoma, Arial, "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei";
+  // font-family: Helvetica, Tahoma, Arial, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei";
 }
 .CodeMirror-selected {
   background-color: blue !important;
@@ -737,8 +814,9 @@ export default {
   background-color: #757575;
 }
 .print {
-  min-height: 100px !important;
-  max-height: 600px;
+  min-height: 40px !important;
+  max-height: calc(100% - 300px);
+  height: 100%;
 }
 /deep/.el-tree {
   background-color: rgba(255, 255, 255, 0);
@@ -790,12 +868,13 @@ export default {
   height: 40px;
   line-height: 40px;
   padding-left: 20px;
-}
-.project:first-child {
-  background-color: #1a1a1a;
+  cursor: pointer;
 }
 .project:hover {
-  background-color: #1a1a1a;
+  background-color: rgba(33, 33, 33, 0.6);
+}
+.pro_active {
+  background-color: #1a1a1a !important;
 }
 .li {
   width: 100%;
